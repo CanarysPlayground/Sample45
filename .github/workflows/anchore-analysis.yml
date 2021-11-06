@@ -1,0 +1,54 @@
+name: Anchore Container Scan
+on:
+  pull_request:
+    branches: [ main ]
+  schedule:
+  - cron: '00 19 * * 5'
+  workflow_dispatch:
+    
+jobs:
+  tailspin-web-scan:
+    runs-on: ubuntu-latest
+    steps:
+      
+    - name: Checkout the code
+      uses: actions/checkout@v2
+      
+    - name: Build taispin-web image
+      run: docker build . --file Tailspin.SpaceGame.Web/Dockerfile --tag localbuild/webtestimage:latest
+      
+    - name: Anchor Scan Web image
+      uses: anchore/scan-action@main
+      with:
+        image: "localbuild/webtestimage:latest"
+        acs-report-enable: true
+         
+    - name: Upload Anchore Scan Report
+      if: always()
+      uses: github/codeql-action/upload-sarif@v1
+      with:
+        sarif_file: results.sarif
+        
+ #=================================================================================================     
+   
+  tailspin-leaderboards-scan:
+    runs-on: ubuntu-latest
+    steps:
+    
+    - name: Checkout the code
+      uses: actions/checkout@v2
+      
+    - name: Build tailspin-leaderboards image
+      run: docker build . --file Tailspin.SpaceGame.LeaderboardContainer//Dockerfile --tag localbuild/leaderboardstestimage:latest
+          
+    - name: Anchor Scan Leaderboards image
+      uses: anchore/scan-action@main
+      with:
+        image: "localbuild/leaderboardstestimage:latest"
+        acs-report-enable: true 
+        
+    - name: Upload Anchore Scan Report
+      if: always()
+      uses: github/codeql-action/upload-sarif@v1
+      with:
+        sarif_file: results.sarif  
